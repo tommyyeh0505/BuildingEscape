@@ -1,6 +1,8 @@
 // Copyright Tommy Yeh 2019
 
 #include "OpenDoor.h"
+#include "Engine/World.h"
+#include "GameFramework/PlayerController.h"
 #include "GameFramework/Actor.h"
 
 // Sets default values for this component's properties
@@ -17,20 +19,51 @@ UOpenDoor::UOpenDoor()
 void UOpenDoor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	UserCharacter = GetWorld()->GetFirstPlayerController()->GetPawn();
 	//Get Owner
+}
+
+void UOpenDoor::OpenDoor()
+{
 	AActor* Owner = GetOwner();
 
-	FRotator RotateDoor = FRotator(0.0f, -90.0f, 0.0f);
+	FRotator RotateDoor = FRotator(0.0f, OpenAngle, 0.0f);
 	Owner->SetActorRotation(RotateDoor);
 	UE_LOG(LogTemp, Warning, TEXT("DoorOpened"));
 }
 
+void UOpenDoor::CloseDoor()
+{
+	AActor* Owner = GetOwner();
+
+	FRotator RotateDoor = FRotator(0.0f, 0.0f, 0.0f);
+	Owner->SetActorRotation(RotateDoor);
+	UE_LOG(LogTemp, Warning, TEXT("DoorClosed"));
+}
 
 // Called every frame
 void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// ...
+	if (PressurePlate != NULL && UserCharacter != NULL) {
+		if (PressurePlate->IsOverlappingActor(UserCharacter)) {
+			if (!Triggered) {
+				Triggered = true;
+				if (Opened) {
+					Opened = false;
+					CloseDoor();
+
+				}
+				else {
+					Opened = true;
+					OpenDoor();
+				}
+			}
+		} else {
+			Triggered = false;
+		}
+	}
 }
 
