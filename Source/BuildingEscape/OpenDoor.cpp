@@ -47,6 +47,30 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	OpenDoorForSetInterval();
+
+}
+
+void UOpenDoor::OpenDoorForSetInterval()
+{
+	if (PressurePlate != NULL && UserCharacter != NULL) {
+		float CurrentTime = GetWorld()->GetTimeSeconds();
+		//UE_LOG(LogTemp, Warning, TEXT("Time: %s"), CurrentTime);
+		if (!Opened && PressurePlate->IsOverlappingActor(UserCharacter)) {
+			OpenDoor();
+			DoorLastOpenedTime = CurrentTime;
+			Opened = true;
+		}
+		
+		if (Opened && CurrentTime - DoorLastOpenedTime > DoorCloseDelay) {
+			Opened = false;
+			CloseDoor();
+		}
+	}
+}
+
+void UOpenDoor::OpenCloseDoorTick()
+{
 	if (PressurePlate != NULL && UserCharacter != NULL) {
 		if (PressurePlate->IsOverlappingActor(UserCharacter)) {
 			if (!Triggered) {
@@ -54,14 +78,14 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 				if (Opened) {
 					Opened = false;
 					CloseDoor();
-
 				}
 				else {
 					Opened = true;
 					OpenDoor();
 				}
 			}
-		} else {
+		}
+		else {
 			Triggered = false;
 		}
 	}
